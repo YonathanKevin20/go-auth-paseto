@@ -1,0 +1,32 @@
+services:
+  api:
+    build: .
+    image: go-auth-paseto:1.0.0
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+    restart: unless-stopped
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+  redis:
+    image: redis:8-alpine
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  postgres_data:
+    name: go-auth-paseto_postgres_data
+  redis_data:
+    name: go-auth-paseto_redis_data

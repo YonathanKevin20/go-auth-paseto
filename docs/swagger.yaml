@@ -1,0 +1,222 @@
+basePath: /api
+definitions:
+  handlers.ErrorDetail:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.ErrorResponseSwagger:
+    properties:
+      error:
+        $ref: '#/definitions/handlers.ErrorDetail'
+    type: object
+  handlers.LoginRequest:
+    properties:
+      password:
+        example: password123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  handlers.LoginResponse:
+    properties:
+      token:
+        example: v4.local.eyJhbGciOiJQQVNFVE8iLCJ0eXAiOiJKV1QifQ...
+        type: string
+    type: object
+  handlers.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.RegisterRequest:
+    properties:
+      password:
+        example: password123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  handlers.SuccessResponse:
+    properties:
+      data: {}
+    type: object
+  handlers.UserResponse:
+    properties:
+      id:
+        example: 1
+        type: integer
+      role:
+        example: operator
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample server for a Go authentication system using Paseto
+    tokens.
+  title: Go Auth Paseto API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with username and password, returns PASETO token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful, returns token
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.LoginResponse'
+              type: object
+        "400":
+          description: Invalid input or missing required fields
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+        "401":
+          description: Invalid username or password
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+      summary: Authenticate user
+      tags:
+      - Authentication
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout the current user by blacklisting their token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully logged out
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.MessageResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+      security:
+      - Bearer: []
+      summary: Logout user
+      tags:
+      - Authentication
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Get the profile information of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.UserResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+      security:
+      - Bearer: []
+      summary: Get current user profile
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with username and password
+      parameters:
+      - description: Registration credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/handlers.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.MessageResponse'
+              type: object
+        "400":
+          description: Invalid input or missing required fields
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+        "409":
+          description: Username already exists
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+      summary: Register a new user
+      tags:
+      - Authentication
+schemes:
+- http
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and PASETO token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
